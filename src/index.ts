@@ -1,5 +1,15 @@
 import { setup, tokenize, tokenTypes, resolveLanguage, type FlatToken } from './tokenizer/prism';
 import { setupTokenHighlights, isHighlightApiSupported, type LanguageTokens } from './utils';
+import {
+  detectFoldRegions,
+  createFoldState,
+  toggleFoldRegion,
+  isRegionCollapsed,
+  getRegionAtLine,
+  transformContent,
+  isFoldableLanguage,
+  type FoldState,
+} from './folding';
 
 export interface CodeBlockConfig {
   languages: string[];
@@ -25,7 +35,7 @@ const COPY_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16
 const CHECK_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
 
 export class CodeBlock extends HTMLElement {
-  static observedAttributes = ['language', 'line-numbers', 'copy-button', 'editable'];
+  static observedAttributes = ['language', 'line-numbers', 'copy-button', 'editable', 'foldable'];
 
   static #config: CodeBlockConfig = { ...defaultConfig };
   static #initialized = false;
@@ -63,9 +73,11 @@ export class CodeBlock extends HTMLElement {
   #codeElement: HTMLElement | null = null;
   #gutterElement: HTMLElement | null = null;
   #copyButtonElement: HTMLButtonElement | null = null;
+  #foldGutterElement: HTMLElement | null = null;
   #originalContent: string | null = null;
   #copyTimeout: ReturnType<typeof setTimeout> | null = null;
   #inputRAF: number | null = null;
+  #foldState: FoldState | null = null;
 
   constructor() {
     super();
@@ -117,16 +129,31 @@ export class CodeBlock extends HTMLElement {
     }
   }
 
-  /** Get the current code content */
+  get foldable(): boolean {
+    return this.hasAttribute('foldable');
+  }
+
+  set foldable(value: boolean) {
+    if (value) {
+      this.setAttribute('foldable', '');
+    } else {
+      this.removeAttribute('foldable');
+    }
+  }
+
+  /** Get the current code content (always returns full, unfolded content) */
   get value(): string {
-    return this.#contentElement.textContent || '';
+    return this.#originalContent || '';
   }
 
   /** Set the code content */
   set value(content: string) {
     this.#originalContent = content;
-    this.#contentElement.textContent = content;
-    this.#onContentChange();
+    // Reset fold state when content changes
+    this.#foldState = null;
+    this.clearTokenHighlights();
+    this.#setupStructure();
+    this.paintTokenHighlights();
   }
 
   get highlights(): Set<StoredHighlight> {
@@ -192,6 +219,10 @@ export class CodeBlock extends HTMLElement {
       this.#updateCopyButton();
     } else if (name === 'editable' && CodeBlock.#initialized) {
       this.#updateEditable();
+    } else if (name === 'foldable' && CodeBlock.#initialized) {
+      this.clearTokenHighlights();
+      this.#setupStructure();
+      this.paintTokenHighlights();
     }
   }
 
@@ -211,49 +242,158 @@ export class CodeBlock extends HTMLElement {
 
   #setupStructure(): void {
     const content = this.#originalContent || '';
-    const lineCount = content.split('\n').length;
+    const resolvedLanguage = resolveLanguage(this.language);
+
+    // Initialize fold state if foldable and language supports it
+    const shouldFold = this.foldable && !this.editable && isFoldableLanguage(resolvedLanguage);
+    if (shouldFold && !this.#foldState) {
+      const tokens = tokenize(content, resolvedLanguage) || [];
+      const regions = detectFoldRegions(content, tokens);
+      this.#foldState = createFoldState(regions);
+    } else if (!shouldFold) {
+      this.#foldState = null;
+    }
+
+    // Get transformed content and line mapping for display
+    const { transformedCode, lineMapping } = this.#foldState
+      ? transformContent(content, this.#foldState)
+      : { transformedCode: content, lineMapping: content.split('\n').map((_, i) => i) };
+
+    const displayLineCount = lineMapping.filter(l => l !== null).length;
+    const originalLineCount = content.split('\n').length;
 
     if (this.lineNumbers) {
-      // Create structure: <gutter> + <code>
-      if (!this.#codeElement) {
-        this.innerHTML = '';
+      // Create structure: [fold-gutter?] + <line-gutter> + <code>
+      this.innerHTML = '';
 
-        this.#gutterElement = document.createElement('div');
-        this.#gutterElement.className = 'line-numbers-gutter';
-        this.#gutterElement.setAttribute('aria-hidden', 'true');
-
-        this.#codeElement = document.createElement('code');
-        this.#codeElement.className = 'code-content';
-        this.#codeElement.textContent = content;
-
-        this.appendChild(this.#gutterElement);
-        this.appendChild(this.#codeElement);
+      // Add fold gutter if foldable
+      if (shouldFold && this.#foldState && this.#foldState.regions.length > 0) {
+        this.#foldGutterElement = document.createElement('div');
+        this.#foldGutterElement.className = 'fold-gutter';
+        this.#foldGutterElement.setAttribute('aria-hidden', 'true');
+        this.appendChild(this.#foldGutterElement);
+        this.#updateFoldGutter();
+      } else {
+        this.#foldGutterElement = null;
       }
 
-      // Update line numbers
-      this.#gutterElement!.innerHTML = Array.from(
-        { length: lineCount },
-        (_, i) => `<span>${i + 1}</span>`
-      ).join('');
+      this.#gutterElement = document.createElement('div');
+      this.#gutterElement.className = 'line-numbers-gutter';
+      this.#gutterElement.setAttribute('aria-hidden', 'true');
+
+      this.#codeElement = document.createElement('code');
+      this.#codeElement.className = 'code-content';
+      this.#codeElement.textContent = transformedCode;
+
+      this.appendChild(this.#gutterElement);
+      this.appendChild(this.#codeElement);
+
+      // Update line numbers - show original line numbers for visible lines
+      this.#updateLineNumbers();
 
       // Set CSS custom property for gutter width calculation
-      const digits = String(lineCount).length;
+      const digits = String(originalLineCount).length;
       this.style.setProperty('--line-number-digits', String(digits));
     } else {
       // Simple structure: just text content
-      if (this.#codeElement) {
-        this.innerHTML = '';
-        this.textContent = content;
-        this.#codeElement = null;
-        this.#gutterElement = null;
-        this.style.removeProperty('--line-number-digits');
-      }
+      this.innerHTML = '';
+      this.textContent = transformedCode;
+      this.#codeElement = null;
+      this.#gutterElement = null;
+      this.#foldGutterElement = null;
+      this.style.removeProperty('--line-number-digits');
     }
 
     // Reset copy button reference since we cleared innerHTML
     this.#copyButtonElement = null;
     this.#updateCopyButton();
     this.#updateEditable();
+  }
+
+  #updateLineNumbers(): void {
+    if (!this.#gutterElement) return;
+
+    const content = this.#originalContent || '';
+
+    if (this.#foldState) {
+      const { lineMapping } = transformContent(content, this.#foldState);
+      // Show original line numbers for visible lines
+      const visibleLineNumbers: number[] = [];
+      for (let i = 0; i < lineMapping.length; i++) {
+        if (lineMapping[i] !== null) {
+          visibleLineNumbers.push(i + 1); // 1-indexed
+        }
+      }
+      this.#gutterElement.innerHTML = visibleLineNumbers
+        .map(n => `<span>${n}</span>`)
+        .join('');
+    } else {
+      const lineCount = content.split('\n').length;
+      this.#gutterElement.innerHTML = Array.from(
+        { length: lineCount },
+        (_, i) => `<span>${i + 1}</span>`
+      ).join('');
+    }
+  }
+
+  #updateFoldGutter(): void {
+    if (!this.#foldGutterElement || !this.#foldState) return;
+
+    const content = this.#originalContent || '';
+    const { lineMapping } = transformContent(content, this.#foldState);
+
+    // Build fold gutter content - one span per visible line
+    // Use \u00A0 (nbsp) as placeholder to ensure consistent line height
+    const items: string[] = [];
+    for (let origLine = 0; origLine < lineMapping.length; origLine++) {
+      if (lineMapping[origLine] === null) continue; // Hidden line
+
+      // Check if there's a fold region starting at this line
+      const regionInfo = getRegionAtLine(this.#foldState, origLine);
+      if (regionInfo) {
+        const isCollapsed = isRegionCollapsed(this.#foldState, regionInfo.index);
+        const icon = isCollapsed ? '\u25B6' : '\u25BC'; // ▶ or ▼
+        items.push(
+          `<span class="fold-toggle" data-region="${regionInfo.index}" title="${isCollapsed ? 'Expand' : 'Collapse'}">${icon}</span>`
+        );
+      } else {
+        // Empty line - use nbsp to maintain line height
+        items.push('<span class="fold-toggle">\u00A0</span>');
+      }
+    }
+
+    this.#foldGutterElement.innerHTML = items.join('');
+
+    // Add click handlers
+    this.#foldGutterElement.querySelectorAll('.fold-toggle[data-region]').forEach(el => {
+      el.addEventListener('click', this.#handleFoldToggle);
+    });
+  }
+
+  #handleFoldToggle = (e: Event): void => {
+    const target = e.target as HTMLElement;
+    const regionIndex = parseInt(target.dataset.region || '', 10);
+    if (isNaN(regionIndex) || !this.#foldState) return;
+
+    this.#foldState = toggleFoldRegion(this.#foldState, regionIndex);
+    this.#applyFoldState();
+  };
+
+  #applyFoldState(): void {
+    if (!this.#foldState) return;
+
+    const content = this.#originalContent || '';
+    const { transformedCode } = transformContent(content, this.#foldState);
+
+    // Update content
+    this.#contentElement.textContent = transformedCode;
+
+    // Update gutters
+    this.#updateLineNumbers();
+    this.#updateFoldGutter();
+
+    // Re-highlight
+    this.paintTokenHighlights();
   }
 
   #updateCopyButton(): void {

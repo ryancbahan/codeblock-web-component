@@ -55,6 +55,37 @@ code-block[line-numbers] .code-content {
 }
 
 /* ============================================
+   Fold Gutter (when foldable + line-numbers)
+   ============================================ */
+
+code-block[foldable][line-numbers] {
+  grid-template-columns: 1.5rem calc(var(--line-number-digits, 2) * 1ch + 1.5rem) 1fr;
+}
+
+code-block .fold-gutter {
+  display: flex;
+  flex-direction: column;
+  user-select: none;
+  padding-left: 0.25rem;
+}
+
+code-block .fold-toggle {
+  width: 1.25rem;
+  text-align: center;
+  line-height: inherit;
+  color: var(--cb-fold-toggle, light-dark(#6e7781, #6e7681));
+  cursor: default;
+}
+
+code-block .fold-toggle[data-region] {
+  cursor: pointer;
+}
+
+code-block .fold-toggle[data-region]:hover {
+  color: var(--cb-fold-toggle-hover, light-dark(#24292f, #f0f6fc));
+}
+
+/* ============================================
    Copy Button
    ============================================ */
 
@@ -300,4 +331,12 @@ code-block {
 
 [data-theme="prism"] code-block[editable]:focus-within {
   outline-color: #07a;
+}
+
+[data-theme="prism"] code-block .fold-toggle {
+  color: #999;
+}
+
+[data-theme="prism"] code-block .fold-toggle[data-region]:hover {
+  color: #333;
 }

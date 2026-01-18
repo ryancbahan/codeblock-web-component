@@ -76,6 +76,36 @@ async function fetchUser(id: number): Promise&lt;User&gt; {
 &lt;/body&gt;
 &lt;/html&gt;</code-block>
 
+  <h2>JavaScript (foldable)</h2>
+  <code-block language="javascript" line-numbers foldable copy-button>class Calculator {
+  constructor(initialValue = 0) {
+    this.value = initialValue;
+    this.history = [];
+  }
+
+  add(n) {
+    this.history.push({ op: 'add', value: n });
+    this.value += n;
+    return this;
+  }
+
+  subtract(n) {
+    this.history.push({ op: 'subtract', value: n });
+    this.value -= n;
+    return this;
+  }
+
+  getHistory() {
+    return this.history.map(entry => {
+      return `${entry.op}: ${entry.value}`;
+    });
+  }
+}
+
+const calc = new Calculator(10);
+calc.add(5).subtract(3);
+console.log(calc.value); // 12</code-block>
+
   <h2>CSS (editable)</h2>
   <code-block language="css" editable copy-button>.container {
   display: flex;
