@@ -25,6 +25,81 @@ code-block {
 }
 
 /* ============================================
+   Line Numbers
+   ============================================ */
+
+code-block[line-numbers] {
+  display: grid;
+  grid-template-columns: calc(var(--line-number-digits, 2) * 1ch + 1.5rem) 1fr;
+  gap: 0;
+  padding: 1rem 1rem 1rem 0;
+}
+
+code-block[line-numbers] .line-numbers-gutter {
+  display: flex;
+  flex-direction: column;
+  text-align: right;
+  padding-right: 1rem;
+  border-right: 1px solid var(--cb-gutter-border, light-dark(#d1d5da, #3d444d));
+  margin-right: 1rem;
+  user-select: none;
+  color: var(--cb-line-number, light-dark(#6e7781, #6e7681));
+}
+
+code-block[line-numbers] .line-numbers-gutter span {
+  line-height: inherit;
+}
+
+code-block[line-numbers] .code-content {
+  overflow-x: auto;
+}
+
+/* ============================================
+   Copy Button
+   ============================================ */
+
+code-block {
+  position: relative;
+}
+
+code-block .copy-button {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: var(--cb-copy-bg, light-dark(rgba(255,255,255,0.8), rgba(255,255,255,0.1)));
+  color: var(--cb-copy-color, light-dark(#57606a, #9198a1));
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+code-block .copy-button:hover {
+  background: var(--cb-copy-bg-hover, light-dark(rgba(255,255,255,1), rgba(255,255,255,0.2)));
+  color: var(--cb-copy-color-hover, light-dark(#24292f, #f0f6fc));
+}
+
+code-block .copy-button:active {
+  transform: scale(0.95);
+}
+
+code-block .copy-button.copied {
+  color: var(--cb-copy-color-success, light-dark(#1a7f37, #3fb950));
+}
+
+code-block .copy-button svg {
+  width: 16px;
+  height: 16px;
+  pointer-events: none;
+}
+
+/* ============================================
    Prettylights Theme (GitHub) - Default
    ============================================ */
 
@@ -184,4 +259,23 @@ code-block {
 
 [data-theme="prism"] ::highlight(entity) {
   cursor: help;
+}
+
+[data-theme="prism"] code-block[line-numbers] .line-numbers-gutter {
+  border-right-color: #ddd;
+  color: #999;
+}
+
+[data-theme="prism"] code-block .copy-button {
+  background: rgba(0, 0, 0, 0.05);
+  color: #666;
+}
+
+[data-theme="prism"] code-block .copy-button:hover {
+  background: rgba(0, 0, 0, 0.1);
+  color: #333;
+}
+
+[data-theme="prism"] code-block .copy-button.copied {
+  color: #080;
 }
