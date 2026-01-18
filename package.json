@@ -10,6 +10,7 @@
       "import": "./dist/codeblock.js",
       "types": "./dist/codeblock.d.ts"
     },
+    "./themes/themes.css": "./dist/themes/themes.css",
     "./themes/prism.css": "./dist/themes/prism.css",
     "./themes/prettylights.css": "./dist/themes/prettylights.css"
   },

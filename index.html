@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CodeBlock Web Component Demo</title>
-  <link rel="stylesheet" href="dist/themes/prettylights.css">
+  <link rel="stylesheet" href="dist/themes/themes.css">
   <script type="module" src="dist/codeblock.js"></script>
   <style>
     body {
@@ -12,7 +12,6 @@
       max-width: 800px;
       margin: 2rem auto;
       padding: 0 1rem;
-      background: #f5f5f5;
     }
     h1 {
       margin-bottom: 2rem;
@@ -28,6 +27,10 @@
       margin-right: 0.5rem;
       cursor: pointer;
     }
+    .theme-switcher button.active {
+      background: #0066cc;
+      color: white;
+    }
   </style>
 </head>
 <body>
@@ -35,7 +38,7 @@
 
   <div class="theme-switcher">
     <strong>Theme:</strong>
-    <button onclick="setTheme('prettylights')">Prettylights (GitHub)</button>
+    <button class="active" onclick="setTheme('prettylights')">Prettylights (GitHub)</button>
     <button onclick="setTheme('prism')">Prism</button>
   </div>
 
@@ -89,8 +92,17 @@ async function fetchUser(id: number): Promise&lt;User&gt; {
 
   <script>
     function setTheme(theme) {
-      const link = document.querySelector('link[rel="stylesheet"]');
-      link.href = `dist/themes/${theme}.css`;
+      // Instant switch via data-theme attribute
+      if (theme === 'prettylights') {
+        document.documentElement.removeAttribute('data-theme');
+      } else {
+        document.documentElement.setAttribute('data-theme', theme);
+      }
+
+      // Update button states
+      document.querySelectorAll('.theme-switcher button').forEach(btn => {
+        btn.classList.toggle('active', btn.textContent.toLowerCase().includes(theme));
+      });
     }
   </script>
 </body>

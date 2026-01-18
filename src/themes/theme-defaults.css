@@ -1,6 +1,13 @@
 /**
  * Defaults injected in every theme.
  */
+
+/* Hide until custom element is defined and ready */
+code-block:not(:defined),
+code-block:not([ready]) {
+  visibility: hidden;
+}
+
 code-block {
   display: block;
   white-space: pre;

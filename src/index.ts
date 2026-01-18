@@ -116,6 +116,7 @@ export class CodeBlock extends HTMLElement {
 
     const firstChild = this.firstChild;
     if (!firstChild || firstChild.nodeType !== Node.TEXT_NODE) {
+      this.setAttribute('ready', '');
       return;
     }
 
@@ -139,6 +140,9 @@ export class CodeBlock extends HTMLElement {
       }
       pos += token.length;
     }
+
+    // Mark as ready to reveal the element
+    this.setAttribute('ready', '');
   }
 
   clearTokenHighlights(): void {

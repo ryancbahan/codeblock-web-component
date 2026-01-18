@@ -1,0 +1,187 @@
+/**
+ * Combined themes with data-theme attribute switching.
+ * Use: <html data-theme="prettylights"> or <html data-theme="prism">
+ * Default is prettylights if no data-theme is set.
+ */
+
+/* Hide until custom element is defined and ready */
+code-block:not(:defined),
+code-block:not([ready]) {
+  visibility: hidden;
+}
+
+code-block {
+  display: block;
+  white-space: pre;
+  word-spacing: normal;
+  word-break: normal;
+  word-wrap: normal;
+  overflow: auto;
+  tab-size: 2;
+  hyphens: none;
+  font-size: 14px;
+  padding: 1rem;
+  border-radius: 6px;
+}
+
+/* ============================================
+   Prettylights Theme (GitHub) - Default
+   ============================================ */
+
+:root {
+  --cb-bg: light-dark(#f6f8fa, #151b23);
+  --cb-fg: light-dark(#1f2328, #f0f6fc);
+  --cb-comment: light-dark(#59636e, #9198a1);
+  --cb-constant: light-dark(#0550ae, #79c0ff);
+  --cb-constant-link: light-dark(#0a3069, #a5d6ff);
+  --cb-entity: light-dark(#6639ba, #d2a8ff);
+  --cb-entity-tag: light-dark(#0550ae, #7ee787);
+  --cb-keyword: light-dark(#cf222e, #ff7b72);
+  --cb-string: light-dark(#0a3069, #a5d6ff);
+  --cb-string-regexp: light-dark(#116329, #7ee787);
+  --cb-variable: light-dark(#953800, #ffa657);
+  --cb-deleted-bg: light-dark(#ffebe9, #67060c);
+  --cb-deleted-text: light-dark(#82071e, #ffdcd7);
+  --cb-inserted-bg: light-dark(#dafbe1, #033a16);
+  --cb-inserted-text: light-dark(#116329, #aff5b4);
+  --cb-heading: light-dark(#0550ae, #1f6feb);
+}
+
+code-block {
+  color-scheme: light dark;
+  color: var(--cb-fg);
+  background-color: var(--cb-bg);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  line-height: 1.6;
+}
+
+::highlight(punctuation),
+::highlight(number),
+::highlight(atrule) {
+  color: var(--cb-fg);
+}
+
+::highlight(namespace) {
+  opacity: 0.7;
+}
+
+::highlight(comment),
+::highlight(prolog),
+::highlight(doctype),
+::highlight(cdata) {
+  color: var(--cb-comment);
+}
+
+::highlight(constant),
+::highlight(attr-name),
+::highlight(char),
+::highlight(builtin),
+::highlight(operator) {
+  color: var(--cb-constant);
+}
+
+::highlight(property),
+::highlight(tag),
+::highlight(boolean),
+::highlight(symbol) {
+  color: var(--cb-entity-tag);
+}
+
+::highlight(entity),
+::highlight(selector),
+::highlight(class-name),
+::highlight(function) {
+  color: var(--cb-entity);
+}
+
+::highlight(keyword),
+::highlight(rule) {
+  color: var(--cb-keyword);
+}
+
+::highlight(string),
+::highlight(attr-value) {
+  color: var(--cb-string);
+}
+
+::highlight(variable) {
+  color: var(--cb-variable);
+}
+
+::highlight(regex) {
+  color: var(--cb-string-regexp);
+}
+
+::highlight(deleted) {
+  color: var(--cb-deleted-text);
+  background-color: var(--cb-deleted-bg);
+}
+
+::highlight(inserted) {
+  color: var(--cb-inserted-text);
+  background-color: var(--cb-inserted-bg);
+}
+
+::highlight(url) {
+  text-decoration: underline;
+  color: var(--cb-constant-link);
+}
+
+::highlight(important) {
+  color: var(--cb-heading);
+}
+
+::highlight(css-important) {
+  color: var(--cb-keyword);
+}
+
+/* ============================================
+   Prism Theme
+   ============================================ */
+
+[data-theme="prism"] {
+  --cb-bg: #f5f2f0;
+  --cb-fg: black;
+  --cb-comment: slategray;
+  --cb-constant: #905;
+  --cb-constant-link: #9a6e3a;
+  --cb-entity: #dd4a68;
+  --cb-entity-tag: #905;
+  --cb-keyword: #07a;
+  --cb-string: #690;
+  --cb-string-regexp: #e90;
+  --cb-variable: #e90;
+  --cb-deleted-bg: transparent;
+  --cb-deleted-text: #905;
+  --cb-inserted-bg: transparent;
+  --cb-inserted-text: #690;
+  --cb-heading: #07a;
+}
+
+[data-theme="prism"] code-block {
+  color-scheme: light;
+  text-shadow: 0 1px white;
+  font-family: Consolas, Monaco, "Andale Mono", "Ubuntu Mono", monospace;
+  line-height: 1.5;
+  border-radius: 4px;
+}
+
+@media print {
+  [data-theme="prism"] code-block {
+    text-shadow: none;
+  }
+}
+
+[data-theme="prism"] ::highlight(punctuation) {
+  color: #999;
+}
+
+[data-theme="prism"] ::highlight(operator),
+[data-theme="prism"] ::highlight(url) {
+  color: #9a6e3a;
+  background: hsla(0, 0%, 100%, 0.5);
+}
+
+[data-theme="prism"] ::highlight(entity) {
+  cursor: help;
+}
