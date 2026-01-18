@@ -1,0 +1,21 @@
+{
+  "name": "codeblock-web-component",
+  "version": "0.1.0",
+  "description": "A web component for displaying code blocks",
+  "type": "module",
+  "main": "dist/codeblock.js",
+  "types": "dist/codeblock.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "esbuild src/index.ts --bundle --minify --format=esm --outfile=dist/codeblock.js",
+    "build:dev": "esbuild src/index.ts --bundle --format=esm --outfile=dist/codeblock.js --sourcemap",
+    "watch": "esbuild src/index.ts --bundle --format=esm --outfile=dist/codeblock.js --sourcemap --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "esbuild": "^0.20.0",
+    "typescript": "^5.3.0"
+  }
+}

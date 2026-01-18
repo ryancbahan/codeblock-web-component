@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CodeBlock Web Component Demo</title>
+  <script type="module" src="dist/codeblock.js"></script>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+    h1 {
+      margin-bottom: 2rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>CodeBlock Web Component Demo</h1>
+
+  <h2>JavaScript Example</h2>
+  <code-block language="javascript">
+function greet(name) {
+  return `Hello, ${name}!`;
+}
+
+console.log(greet('World'));
+  </code-block>
+
+  <h2>TypeScript Example</h2>
+  <code-block language="typescript">
+interface User {
+  name: string;
+  email: string;
+}
+
+const user: User = {
+  name: 'John',
+  email: 'john@example.com'
+};
+  </code-block>
+</body>
+</html>
