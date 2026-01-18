@@ -1,16 +1,27 @@
 {
   "name": "codeblock-web-component",
   "version": "0.1.0",
-  "description": "A web component for displaying code blocks",
+  "description": "A web component for displaying code blocks with syntax highlighting",
   "type": "module",
   "main": "dist/codeblock.js",
   "types": "dist/codeblock.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/codeblock.js",
+      "types": "./dist/codeblock.d.ts"
+    },
+    "./themes/prism.css": "./dist/themes/prism.css",
+    "./themes/prettylights.css": "./dist/themes/prettylights.css"
+  },
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "esbuild src/index.ts --bundle --minify --format=esm --outfile=dist/codeblock.js",
-    "build:dev": "esbuild src/index.ts --bundle --format=esm --outfile=dist/codeblock.js --sourcemap",
+    "build": "npm run build:js && npm run build:css",
+    "build:js": "esbuild src/index.ts --bundle --minify --format=esm --outfile=dist/codeblock.js",
+    "build:css": "mkdir -p dist/themes && cp src/themes/*.css dist/themes/",
+    "build:dev": "npm run build:js:dev && npm run build:css",
+    "build:js:dev": "esbuild src/index.ts --bundle --format=esm --outfile=dist/codeblock.js --sourcemap",
     "watch": "esbuild src/index.ts --bundle --format=esm --outfile=dist/codeblock.js --sourcemap --watch",
     "typecheck": "tsc --noEmit"
   },

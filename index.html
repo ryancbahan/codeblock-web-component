@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CodeBlock Web Component Demo</title>
+  <link rel="stylesheet" href="dist/themes/prettylights.css">
   <script type="module" src="dist/codeblock.js"></script>
   <style>
     body {
@@ -11,35 +12,86 @@
       max-width: 800px;
       margin: 2rem auto;
       padding: 0 1rem;
+      background: #f5f5f5;
     }
     h1 {
       margin-bottom: 2rem;
+    }
+    h2 {
+      margin-top: 2rem;
+    }
+    .theme-switcher {
+      margin-bottom: 2rem;
+    }
+    .theme-switcher button {
+      padding: 0.5rem 1rem;
+      margin-right: 0.5rem;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
   <h1>CodeBlock Web Component Demo</h1>
 
-  <h2>JavaScript Example</h2>
-  <code-block language="javascript">
-function greet(name) {
-  return `Hello, ${name}!`;
+  <div class="theme-switcher">
+    <strong>Theme:</strong>
+    <button onclick="setTheme('prettylights')">Prettylights (GitHub)</button>
+    <button onclick="setTheme('prism')">Prism</button>
+  </div>
+
+  <h2>JavaScript</h2>
+  <code-block language="javascript">function greet(name) {
+  const message = `Hello, ${name}!`;
+  console.log(message);
+  return message;
 }
 
-console.log(greet('World'));
-  </code-block>
+// Call the function
+greet('World');</code-block>
 
-  <h2>TypeScript Example</h2>
-  <code-block language="typescript">
-interface User {
+  <h2>TypeScript</h2>
+  <code-block language="typescript">interface User {
+  id: number;
   name: string;
   email: string;
 }
 
-const user: User = {
-  name: 'John',
-  email: 'john@example.com'
-};
-  </code-block>
+async function fetchUser(id: number): Promise&lt;User&gt; {
+  const response = await fetch(`/api/users/${id}`);
+  return response.json();
+}</code-block>
+
+  <h2>HTML</h2>
+  <code-block language="html">&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;title&gt;Hello World&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;h1&gt;Hello, World!&lt;/h1&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code-block>
+
+  <h2>CSS</h2>
+  <code-block language="css">.container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 2rem;
+  background-color: #f5f5f5;
+  border-radius: 8px;
+}
+
+.container:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}</code-block>
+
+  <script>
+    function setTheme(theme) {
+      const link = document.querySelector('link[rel="stylesheet"]');
+      link.href = `dist/themes/${theme}.css`;
+    }
+  </script>
 </body>
 </html>
