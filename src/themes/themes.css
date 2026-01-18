@@ -100,6 +100,24 @@ code-block .copy-button svg {
 }
 
 /* ============================================
+   Editable
+   ============================================ */
+
+code-block[editable] {
+  cursor: text;
+}
+
+code-block[editable] [contenteditable] {
+  outline: none;
+  caret-color: var(--cb-caret, currentColor);
+}
+
+code-block[editable]:focus-within {
+  outline: 2px solid var(--cb-focus-ring, light-dark(#0969da, #58a6ff));
+  outline-offset: -2px;
+}
+
+/* ============================================
    Prettylights Theme (GitHub) - Default
    ============================================ */
 
@@ -278,4 +296,8 @@ code-block {
 
 [data-theme="prism"] code-block .copy-button.copied {
   color: #080;
+}
+
+[data-theme="prism"] code-block[editable]:focus-within {
+  outline-color: #07a;
 }

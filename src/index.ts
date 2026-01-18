@@ -25,7 +25,7 @@ const COPY_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16
 const CHECK_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
 
 export class CodeBlock extends HTMLElement {
-  static observedAttributes = ['language', 'line-numbers', 'copy-button'];
+  static observedAttributes = ['language', 'line-numbers', 'copy-button', 'editable'];
 
   static #config: CodeBlockConfig = { ...defaultConfig };
   static #initialized = false;
@@ -65,6 +65,7 @@ export class CodeBlock extends HTMLElement {
   #copyButtonElement: HTMLButtonElement | null = null;
   #originalContent: string | null = null;
   #copyTimeout: ReturnType<typeof setTimeout> | null = null;
+  #inputDebounceTimeout: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
     super();
@@ -102,6 +103,30 @@ export class CodeBlock extends HTMLElement {
     } else {
       this.removeAttribute('copy-button');
     }
+  }
+
+  get editable(): boolean {
+    return this.hasAttribute('editable');
+  }
+
+  set editable(value: boolean) {
+    if (value) {
+      this.setAttribute('editable', '');
+    } else {
+      this.removeAttribute('editable');
+    }
+  }
+
+  /** Get the current code content */
+  get value(): string {
+    return this.#contentElement.textContent || '';
+  }
+
+  /** Set the code content */
+  set value(content: string) {
+    this.#originalContent = content;
+    this.#contentElement.textContent = content;
+    this.#onContentChange();
   }
 
   get highlights(): Set<StoredHighlight> {
@@ -144,6 +169,10 @@ export class CodeBlock extends HTMLElement {
     if (this.#copyTimeout) {
       clearTimeout(this.#copyTimeout);
     }
+    if (this.#inputDebounceTimeout) {
+      clearTimeout(this.#inputDebounceTimeout);
+    }
+    this.#contentElement.removeEventListener('input', this.#handleInput);
   }
 
   attributeChangedCallback(name: string, oldValue: string | null, newValue: string | null): void {
@@ -161,6 +190,8 @@ export class CodeBlock extends HTMLElement {
       this.paintTokenHighlights();
     } else if (name === 'copy-button' && CodeBlock.#initialized) {
       this.#updateCopyButton();
+    } else if (name === 'editable' && CodeBlock.#initialized) {
+      this.#updateEditable();
     }
   }
 
@@ -222,6 +253,7 @@ export class CodeBlock extends HTMLElement {
     // Reset copy button reference since we cleared innerHTML
     this.#copyButtonElement = null;
     this.#updateCopyButton();
+    this.#updateEditable();
   }
 
   #updateCopyButton(): void {
@@ -242,6 +274,64 @@ export class CodeBlock extends HTMLElement {
         this.#copyButtonElement = null;
       }
     }
+  }
+
+  #updateEditable(): void {
+    const contentEl = this.#contentElement;
+    if (this.editable) {
+      contentEl.setAttribute('contenteditable', 'plaintext-only');
+      contentEl.addEventListener('input', this.#handleInput);
+      contentEl.setAttribute('spellcheck', 'false');
+      contentEl.setAttribute('autocorrect', 'off');
+      contentEl.setAttribute('autocapitalize', 'off');
+    } else {
+      contentEl.removeAttribute('contenteditable');
+      contentEl.removeEventListener('input', this.#handleInput);
+      contentEl.removeAttribute('spellcheck');
+      contentEl.removeAttribute('autocorrect');
+      contentEl.removeAttribute('autocapitalize');
+    }
+  }
+
+  #handleInput = (): void => {
+    // Debounce re-highlighting for performance
+    if (this.#inputDebounceTimeout) {
+      clearTimeout(this.#inputDebounceTimeout);
+    }
+    this.#inputDebounceTimeout = setTimeout(() => {
+      this.#onContentChange();
+    }, 50);
+  };
+
+  #onContentChange(): void {
+    const contentEl = this.#contentElement;
+
+    // Merge text nodes - pressing Enter creates multiple text nodes,
+    // but CSS Highlight API needs a single text node for ranges
+    contentEl.normalize();
+
+    // Update stored content
+    this.#originalContent = contentEl.textContent || '';
+
+    // Update line numbers if enabled
+    if (this.lineNumbers && this.#gutterElement) {
+      const lineCount = this.#originalContent.split('\n').length;
+      this.#gutterElement.innerHTML = Array.from(
+        { length: lineCount },
+        (_, i) => `<span>${i + 1}</span>`
+      ).join('');
+      const digits = String(lineCount).length;
+      this.style.setProperty('--line-number-digits', String(digits));
+    }
+
+    // Re-highlight
+    this.update();
+
+    // Dispatch change event
+    this.dispatchEvent(new CustomEvent('change', {
+      bubbles: true,
+      detail: { value: this.#originalContent }
+    }));
   }
 
   #handleCopy = async (): Promise<void> => {
