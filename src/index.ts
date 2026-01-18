@@ -65,7 +65,7 @@ export class CodeBlock extends HTMLElement {
   #copyButtonElement: HTMLButtonElement | null = null;
   #originalContent: string | null = null;
   #copyTimeout: ReturnType<typeof setTimeout> | null = null;
-  #inputDebounceTimeout: ReturnType<typeof setTimeout> | null = null;
+  #inputRAF: number | null = null;
 
   constructor() {
     super();
@@ -169,8 +169,8 @@ export class CodeBlock extends HTMLElement {
     if (this.#copyTimeout) {
       clearTimeout(this.#copyTimeout);
     }
-    if (this.#inputDebounceTimeout) {
-      clearTimeout(this.#inputDebounceTimeout);
+    if (this.#inputRAF) {
+      cancelAnimationFrame(this.#inputRAF);
     }
     this.#contentElement.removeEventListener('input', this.#handleInput);
   }
@@ -294,13 +294,13 @@ export class CodeBlock extends HTMLElement {
   }
 
   #handleInput = (): void => {
-    // Debounce re-highlighting for performance
-    if (this.#inputDebounceTimeout) {
-      clearTimeout(this.#inputDebounceTimeout);
+    // Use rAF to repaint before next frame (prevents FOUC)
+    if (this.#inputRAF) {
+      cancelAnimationFrame(this.#inputRAF);
     }
-    this.#inputDebounceTimeout = setTimeout(() => {
+    this.#inputRAF = requestAnimationFrame(() => {
       this.#onContentChange();
-    }, 50);
+    });
   };
 
   #onContentChange(): void {
@@ -394,6 +394,10 @@ export class CodeBlock extends HTMLElement {
       return;
     }
 
+    // Store old highlights to clear after painting new ones (prevents FOUC)
+    const oldHighlights = new Set(this.#highlights);
+    this.#highlights.clear();
+
     let pos = 0;
     for (const token of tokens) {
       if (token.type) {
@@ -415,6 +419,11 @@ export class CodeBlock extends HTMLElement {
       pos += token.length;
     }
 
+    // Clear old highlights after new ones are painted
+    for (const highlight of oldHighlights) {
+      CSS.highlights?.get(highlight.tokenType)?.delete(highlight.range);
+    }
+
     // Mark as ready to reveal the element
     this.setAttribute('ready', '');
   }
@@ -422,12 +431,11 @@ export class CodeBlock extends HTMLElement {
   clearTokenHighlights(): void {
     for (const highlight of this.#highlights) {
       CSS.highlights?.get(highlight.tokenType)?.delete(highlight.range);
-      this.#highlights.delete(highlight);
     }
+    this.#highlights.clear();
   }
 
   update(): void {
-    this.clearTokenHighlights();
     this.paintTokenHighlights();
   }
 
