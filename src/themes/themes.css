@@ -1,7 +1,47 @@
 /**
- * Combined themes with data-theme attribute switching.
- * Use: <html data-theme="prettylights"> or <html data-theme="prism">
- * Default is prettylights if no data-theme is set.
+ * CodeBlock Web Component - Theme Stylesheet
+ *
+ * Theme Switching:
+ *   Use data-theme attribute: <html data-theme="prism">
+ *   Default theme is "prettylights" (GitHub-style)
+ *
+ * ============================================
+ * CSS Custom Properties Reference
+ * ============================================
+ *
+ * COLORS (Syntax Highlighting):
+ *   --cb-bg              Background color
+ *   --cb-fg              Default text color
+ *   --cb-comment         Comments, prolog, doctype, cdata
+ *   --cb-constant        Constants, attr-name, char, builtin, operator
+ *   --cb-constant-link   URL color
+ *   --cb-entity          Entity, selector, class-name, function
+ *   --cb-entity-tag      Property, tag, boolean, symbol
+ *   --cb-keyword         Keywords, rules
+ *   --cb-string          Strings, attr-value
+ *   --cb-string-regexp   Regular expressions
+ *   --cb-variable        Variables
+ *   --cb-deleted-bg      Deleted text background
+ *   --cb-deleted-text    Deleted text color
+ *   --cb-inserted-bg     Inserted text background
+ *   --cb-inserted-text   Inserted text color
+ *   --cb-heading         Headings, important
+ *
+ * UI ELEMENTS:
+ *   --cb-gutter-border       Line numbers gutter border
+ *   --cb-line-number         Line number text color
+ *   --cb-fold-toggle         Fold toggle icon color
+ *   --cb-fold-toggle-hover   Fold toggle hover color
+ *   --cb-copy-bg             Copy button background
+ *   --cb-copy-bg-hover       Copy button hover background
+ *   --cb-copy-color          Copy button icon color
+ *   --cb-copy-color-hover    Copy button icon hover color
+ *   --cb-copy-color-success  Copy button success color (checkmark)
+ *   --cb-caret               Cursor color in editable mode
+ *   --cb-focus-ring          Focus outline color for editable mode
+ *
+ * INTERNAL (set automatically):
+ *   --line-number-digits     Number of digits in line numbers (for width calc)
  */
 
 /* Hide until custom element is defined and ready */

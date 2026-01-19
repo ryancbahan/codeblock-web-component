@@ -15,7 +15,7 @@ export function setupTokenHighlights(
   const allTokenTypes = [...tokenTypes, ...languageTokenTypes];
 
   for (const tokenType of allTokenTypes) {
-    if (CSS.highlights && !CSS.highlights.has(tokenType)) {
+    if (typeof CSS !== 'undefined' && CSS.highlights && !CSS.highlights.has(tokenType)) {
       CSS.highlights.set(tokenType, new Highlight());
     }
   }
